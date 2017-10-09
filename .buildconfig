@@ -1,0 +1,9 @@
+[default]
+name=Vorgabe
+device=local
+runtime=host
+config-opts=
+run-opts=
+prefix=/home/gunibert/jhbuild/install
+app-id=
+default=true
