@@ -1,3 +1,8 @@
+public_headers = [
+	'gitlab-client.h',
+	'gitlab-project.h'
+]
+
 source_c = [
 	'gitlab-client.c',
 	'gitlab-project.c'
@@ -18,3 +23,7 @@ pkgconfig.generate(
 	libraries: gitlab_lib,
 	version: '0.1'
 	)
+
+install_headers(
+	public_headers
+)
