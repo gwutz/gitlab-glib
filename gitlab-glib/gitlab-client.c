@@ -166,6 +166,7 @@ GList *
 gitlab_client_get_projects (GitlabClient *self)
 {
 	GError *error = NULL;
+	GList *list = NULL;
 	gchar *url = g_strconcat (self->baseurl, "/projects", NULL);
 
 	SoupMessage *msg = soup_message_new ("GET", url);
@@ -190,9 +191,11 @@ gitlab_client_get_projects (GitlabClient *self)
 
 		const gchar *name = json_object_get_string_member (object, "name_with_namespace");
 		const gchar *description = json_object_get_string_member (object, "description");
+
+		list = g_list_append (list, g_strdup(name));
 		/* if (!json_object_has_member (object, "forked_from_project")) */
 		/* 	g_print ("%s\n%s\n", name, description); */
 	}
 
-	return NULL;
+	return list;
 }
