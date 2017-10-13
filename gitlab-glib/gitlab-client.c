@@ -163,24 +163,12 @@ gitlab_client_get_version (GitlabClient  *self,
 }
 
 GList *
-gitlab_client_get_projects (GitlabClient *self)
+gitlab_client_get_projects_part(SoupMessage *msg)
 {
 	GError *error = NULL;
 	GList *list = NULL;
-	gchar *url = g_strconcat (self->baseurl, "/projects", NULL);
-
-	SoupMessage *msg = soup_message_new ("GET", url);
-	g_free (url);
-
-	soup_message_headers_append (msg->request_headers, "PRIVATE-TOKEN", self->token);
-
-	soup_session_send_message (self->session, msg);
-
-	const gchar *items_str = soup_message_headers_get_one (msg->response_headers, "X-Total");
-	gint items = strtol(items_str, NULL, 10);
-	g_print ("Items: %d\n", items);
-
 	JsonParser *parser = json_parser_new ();
+
 	json_parser_load_from_data (parser, msg->response_body->data, msg->response_body->length, &error);
 	JsonNode *root = json_parser_get_root (parser);
 
@@ -190,12 +178,33 @@ gitlab_client_get_projects (GitlabClient *self)
 		JsonObject *object = json_node_get_object (node);
 
 		const gchar *name = json_object_get_string_member (object, "name_with_namespace");
-		const gchar *description = json_object_get_string_member (object, "description");
+		/* const gchar *description = json_object_get_string_member (object, "description"); */
 
 		if (!json_object_has_member (object, "forked_from_project"))
 			list = g_list_append (list, g_strdup(name));
-		/* 	g_print ("%s\n%s\n", name, description); */
 	}
+
+	g_object_unref (parser);
+	return list;
+}
+
+GList *
+gitlab_client_get_projects (GitlabClient *self)
+{
+	GList *list = NULL;
+
+	gchar *url = g_strconcat (self->baseurl, "/projects", NULL);
+	SoupMessage *msg = soup_message_new ("GET", url);
+	g_free (url);
+
+	soup_message_headers_append (msg->request_headers, "PRIVATE-TOKEN", self->token);
+
+	soup_session_send_message (self->session, msg);
+
+	const gchar *items_str = soup_message_headers_get_one (msg->response_headers, "X-Total");
+
+
+	list = gitlab_client_get_projects_part (msg);
 
 	return list;
 }
