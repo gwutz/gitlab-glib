@@ -201,10 +201,29 @@ gitlab_client_get_projects (GitlabClient *self)
 
 	soup_session_send_message (self->session, msg);
 
-	const gchar *items_str = soup_message_headers_get_one (msg->response_headers, "X-Total");
-
-
 	list = gitlab_client_get_projects_part (msg);
+	const gchar *pages_str = soup_message_headers_get_one (msg->response_headers, "X-Total-Pages");
+	int pages = strtol (pages_str, NULL, 10);
+	const gchar *current_page_str = soup_message_headers_get_one (msg->response_headers, "X-Page");
+	int current_page = strtol (current_page_str, NULL, 10);
+
+	/* g_free (msg); */
+
+	for (int i = ++current_page; i <= pages; i++) {
+		char p[3];
+		g_snprintf (p, 3, "%d", i);
+		gchar *url = g_strconcat (self->baseurl, "/projects", "?page=", p, NULL);
+
+		msg = soup_message_new ("GET", url);
+		g_free (url);
+
+		soup_message_headers_append (msg->request_headers, "PRIVATE-TOKEN", self->token);
+
+		soup_session_send_message (self->session, msg);
+
+		GList *more = gitlab_client_get_projects_part (msg);
+		list = g_list_concat (list, more);
+	}
 
 	return list;
 }
