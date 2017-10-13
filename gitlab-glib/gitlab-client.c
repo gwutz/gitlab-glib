@@ -180,9 +180,10 @@ gitlab_client_get_projects_part(SoupMessage *msg)
 
 		const gchar *name = json_object_get_string_member (object, "name_with_namespace");
 		const gchar *description = json_object_get_string_member (object, "description");
+		const gchar *avatar = json_object_get_string_member (object, "avatar_url");
 
 		if (!json_object_has_member (object, "forked_from_project")) {
-			GitlabProject *p = gitlab_project_new (name, description);
+			GitlabProject *p = gitlab_project_new (name, description, avatar);
 			list = g_list_append (list, p);
 		}
 	}

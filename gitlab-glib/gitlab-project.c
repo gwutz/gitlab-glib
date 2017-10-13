@@ -24,6 +24,7 @@ struct _GitlabProject
 	gint id;
 	gchar *name;
 	gchar *description;
+	gchar *avatar;
 };
 
 G_DEFINE_TYPE (GitlabProject, gitlab_project, G_TYPE_OBJECT)
@@ -33,17 +34,19 @@ enum {
 	PROP_ID,
 	PROP_NAME,
 	PROP_DESCRIPTION,
+	PROP_AVATAR,
 	N_PROPS
 };
 
 static GParamSpec *properties [N_PROPS];
 
 GitlabProject *
-gitlab_project_new (gchar *name, gchar *description)
+gitlab_project_new (gchar *name, gchar *description, gchar *avatar)
 {
 	return g_object_new (GITLAB_TYPE_PROJECT,
 											 "name", name,
 											 "description", description,
+											 "avatar", avatar,
 											 NULL);
 }
 
@@ -54,6 +57,7 @@ gitlab_project_finalize (GObject *object)
 
 	g_free (self->name);
 	g_free (self->description);
+	g_free (self->avatar);
 
 	G_OBJECT_CLASS (gitlab_project_parent_class)->finalize (object);
 }
@@ -76,6 +80,9 @@ gitlab_project_get_property (GObject    *object,
 			break;
 		case PROP_DESCRIPTION:
 			g_value_set_string (value, self->description);
+			break;
+		case PROP_AVATAR:
+			g_value_set_string (value, self->avatar);
 			break;
 	  default:
 	    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -101,6 +108,9 @@ gitlab_project_set_property (GObject      *object,
 		case PROP_DESCRIPTION:
 			self->description = g_value_dup_string (value);
 			break;
+		case PROP_AVATAR:
+			self->avatar = g_value_dup_string (value);
+			break;
 	  default:
 	    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 	  }
@@ -124,6 +134,9 @@ gitlab_project_class_init (GitlabProjectClass *klass)
 	properties[PROP_DESCRIPTION] =
 		g_param_spec_string ("description", "Description", "The description of the project", "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+	properties[PROP_AVATAR] =
+		g_param_spec_string ("avatar", "Avatar", "The url of the avatar of the project", "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
 	g_object_class_install_properties (object_class, N_PROPS, properties);
 }
 
@@ -142,4 +155,10 @@ gchar *
 gitlab_project_get_description (GitlabProject *self)
 {
 	return self->description;
+}
+
+gchar *
+gitlab_project_get_avatar (GitlabProject *self)
+{
+	return self->avatar;
 }
