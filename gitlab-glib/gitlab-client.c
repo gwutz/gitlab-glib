@@ -17,6 +17,7 @@
  */
 
 #include "gitlab-client.h"
+#include "gitlab-project.h"
 #include <libsoup/soup.h>
 #include <json-glib/json-glib.h>
 #include <stdlib.h>
@@ -180,8 +181,10 @@ gitlab_client_get_projects_part(SoupMessage *msg)
 		const gchar *name = json_object_get_string_member (object, "name_with_namespace");
 		/* const gchar *description = json_object_get_string_member (object, "description"); */
 
-		if (!json_object_has_member (object, "forked_from_project"))
-			list = g_list_append (list, g_strdup(name));
+		if (!json_object_has_member (object, "forked_from_project")) {
+			GitlabProject *p = gitlab_project_new (name);
+			list = g_list_append (list, p);
+		}
 	}
 
 	g_object_unref (parser);
@@ -206,8 +209,6 @@ gitlab_client_get_projects (GitlabClient *self)
 	int pages = strtol (pages_str, NULL, 10);
 	const gchar *current_page_str = soup_message_headers_get_one (msg->response_headers, "X-Page");
 	int current_page = strtol (current_page_str, NULL, 10);
-
-	/* g_free (msg); */
 
 	for (int i = ++current_page; i <= pages; i++) {
 		char p[3];
