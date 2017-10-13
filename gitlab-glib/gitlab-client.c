@@ -182,6 +182,8 @@ gitlab_client_get_projects_part(SoupMessage *msg)
 		const gchar *description = json_object_get_string_member (object, "description");
 		const gchar *avatar = json_object_get_string_member (object, "avatar_url");
 
+		g_print ("name: %s - url: %s\n", name, avatar);
+
 		if (!json_object_has_member (object, "forked_from_project")) {
 			GitlabProject *p = gitlab_project_new (name, description, avatar);
 			list = g_list_append (list, p);
