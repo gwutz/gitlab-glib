@@ -25,7 +25,8 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (GitlabProject, gitlab_project, GITLAB, PROJECT, GObject)
 
-GitlabProject *gitlab_project_new (gchar *name);
+GitlabProject *gitlab_project_new (gchar *name, gchar *description);
 gchar *gitlab_project_get_name (GitlabProject *self);
+gchar *gitlab_project_get_description (GitlabProject *self);
 
 G_END_DECLS
