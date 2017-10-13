@@ -130,3 +130,9 @@ static void
 gitlab_project_init (GitlabProject *self)
 {
 }
+
+gchar *
+gitlab_project_get_name (GitlabProject *self)
+{
+	return self->name;
+}
