@@ -34,7 +34,8 @@ void gitlab_client_get_version (GitlabClient  *self,
                                 const gchar  **revision);
 void gitlab_client_get_projects_async (GitlabClient        *self,
                                        GAsyncReadyCallback  callback,
-                                       GCancellable        *cancellable);
+                                       GCancellable        *cancellable,
+                                       gpointer             user_data);
 GList *gitlab_client_get_projects_finish (GitlabClient *self,
                                           GAsyncResult  *res,
                                           GError        **error);

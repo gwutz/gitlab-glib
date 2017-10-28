@@ -269,14 +269,15 @@ gitlab_client_get_projects_cb (GTask        *task,
 void
 gitlab_client_get_projects_async (GitlabClient        *self,
                                   GAsyncReadyCallback  callback,
-                                  GCancellable        *cancellable)
+                                  GCancellable        *cancellable,
+                                  gpointer             user_data)
 {
 	g_autoptr (GTask) task = NULL;
 
 	g_assert (GITLAB_IS_CLIENT (self));
 	g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
 
-	task = g_task_new (self, cancellable, callback, NULL);
+	task = g_task_new (self, cancellable, callback, user_data);
 
 	g_task_run_in_thread (task, gitlab_client_get_projects_cb);
 }
