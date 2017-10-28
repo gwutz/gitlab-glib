@@ -54,7 +54,7 @@ main (gint   argc,
 {
 	GitlabClient *client = gitlab_client_new ("https://gitlab.gnome.org/api/v4", "GgnbVSvFS8xj22nFtVg9");
 
-	gitlab_client_get_projects_async (client, callback, NULL, NULL);
+	gitlab_client_get_projects_async (client, callback, NULL);
 
 	GMainLoop *loop = g_main_loop_new (NULL, FALSE);
 
