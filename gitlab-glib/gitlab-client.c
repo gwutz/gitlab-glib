@@ -17,10 +17,10 @@
  */
 
 #include "gitlab-client.h"
-#include "gitlab-project.h"
 #include <libsoup/soup.h>
 #include <json-glib/json-glib.h>
 #include <stdlib.h>
+#include <time.h>
 
 struct _GitlabClient
 {
@@ -63,6 +63,7 @@ gitlab_client_finalize (GObject *object)
 
 	g_free (self->baseurl);
 	g_free (self->token);
+	g_object_unref (self->session);
 
 	G_OBJECT_CLASS (gitlab_client_parent_class)->finalize (object);
 }
@@ -163,14 +164,15 @@ gitlab_client_get_version (GitlabClient  *self,
 	*revision = json_object_get_string_member (object, "revision");
 }
 
-GList *
-gitlab_client_get_projects_part(SoupMessage *msg)
+static GList *
+gitlab_client_parse_projects (GInputStream *stream,
+                              GCancellable *cancellable,
+                              GError       *error)
 {
-	GError *error = NULL;
 	GList *list = NULL;
 	JsonParser *parser = json_parser_new ();
 
-	json_parser_load_from_data (parser, msg->response_body->data, msg->response_body->length, &error);
+	json_parser_load_from_stream (parser, stream, cancellable, &error);
 	JsonNode *root = json_parser_get_root (parser);
 
 	JsonArray *array = json_node_get_array (root);
@@ -178,56 +180,182 @@ gitlab_client_get_projects_part(SoupMessage *msg)
 		JsonNode *node = json_array_get_element (array, i);
 		JsonObject *object = json_node_get_object (node);
 
-		const gchar *name = json_object_get_string_member (object, "name_with_namespace");
-		const gchar *description = json_object_get_string_member (object, "description");
-		const gchar *avatar = json_object_get_string_member (object, "avatar_url");
-
-		g_print ("name: %s - url: %s\n", name, avatar);
-
-		if (!json_object_has_member (object, "forked_from_project")) {
-			GitlabProject *p = gitlab_project_new (name, description, avatar);
-			list = g_list_append (list, p);
+		if (json_object_has_member (object, "forked_from_project")) {
+			continue;
 		}
+		g_autofree gchar *name = g_strdup (json_object_get_string_member (object, "name_with_namespace"));
+		g_autofree gchar *description = g_strdup (json_object_get_string_member (object, "description"));
+		g_autofree gchar *avatar = g_strdup (json_object_get_string_member (object, "avatar_url"));
+
+		GitlabProject *p = gitlab_project_new (name, description, avatar);
+		list = g_list_append (list, p);
 	}
 
 	g_object_unref (parser);
 	return list;
 }
 
-GList *
-gitlab_client_get_projects (GitlabClient *self)
+static SoupMessage*
+gitlab_client_auth_message (GitlabClient *self,
+                            gchar        *url)
 {
+	SoupMessage *msg = soup_message_new ("GET", url);
+	soup_message_headers_append (msg->request_headers, "PRIVATE-TOKEN", self->token);
+	return msg;
+}
+
+static void
+gitlab_client_get_projects_cb (GTask        *task,
+                               gpointer      source_object,
+                               gpointer      task_data,
+                               GCancellable *cancellable)
+{
+	g_autoptr(GInputStream) stream = NULL;
+	GError *error = NULL;
 	GList *list = NULL;
 
-	gchar *url = g_strconcat (self->baseurl, "/projects", NULL);
-	SoupMessage *msg = soup_message_new ("GET", url);
-	g_free (url);
+	g_assert (GITLAB_IS_CLIENT (source_object));
+	g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
 
-	soup_message_headers_append (msg->request_headers, "PRIVATE-TOKEN", self->token);
-
-	soup_session_send_message (self->session, msg);
-
-	list = gitlab_client_get_projects_part (msg);
-	const gchar *pages_str = soup_message_headers_get_one (msg->response_headers, "X-Total-Pages");
-	int pages = strtol (pages_str, NULL, 10);
-	const gchar *current_page_str = soup_message_headers_get_one (msg->response_headers, "X-Page");
-	int current_page = strtol (current_page_str, NULL, 10);
-
-	for (int i = ++current_page; i <= pages; i++) {
-		char p[3];
-		g_snprintf (p, 3, "%d", i);
-		gchar *url = g_strconcat (self->baseurl, "/projects", "?page=", p, NULL);
-
-		msg = soup_message_new ("GET", url);
-		g_free (url);
-
-		soup_message_headers_append (msg->request_headers, "PRIVATE-TOKEN", self->token);
-
-		soup_session_send_message (self->session, msg);
-
-		GList *more = gitlab_client_get_projects_part (msg);
-		list = g_list_concat (list, more);
+	GitlabClient *self = GITLAB_CLIENT (source_object);
+	g_autofree gchar *url = g_strconcat (self->baseurl, "/projects", NULL);
+	SoupMessage *msg = gitlab_client_auth_message (self, url);
+	stream = soup_session_send (self->session, msg, cancellable, &error);
+	g_object_unref (msg);
+	if (!stream && !g_input_stream_close (stream, cancellable, &error)) {
+		g_task_return_error (task, error);
 	}
 
-	return list;
+	const gchar *pages_str = soup_message_headers_get_one (msg->response_headers, "X-Total-Pages");
+	int pages = strtol (pages_str, NULL, 10);
+
+	for (int i = 1; i <= pages; i++)
+	  {
+			char p[3];
+			g_snprintf (p, 3, "%d", i);
+			url = g_strconcat (self->baseurl, "/projects", "?page=", p, NULL);
+
+			msg = gitlab_client_auth_message (self, url);
+			stream = soup_session_send (self->session, msg, cancellable, &error);
+			if (!stream) {
+				g_task_return_error (task, error);
+			}
+			GList *more = gitlab_client_parse_projects (stream, cancellable, error);
+			if (!g_input_stream_close (stream, cancellable, &error)) {
+				g_task_return_error (task, error);
+			}
+			g_object_unref (msg);
+
+			if (list == NULL) {
+				list = more;
+			} else {
+				list = g_list_concat (list, more);
+			}
+	  }
+
+	g_task_return_pointer (task, list, NULL);
+}
+
+/**
+ * gitlab_client_get_projects_async:
+ * @self: a #GitlabClient
+ * @callback: the callback for the async operation
+ * @cancellable: (nullable): a #Gcancellable, or %NULL
+ *
+ * Asynchronously loads all projects, which are not forked from other projects
+ *
+ * See also: gitlab_client_get_projects_finish()
+ */
+void
+gitlab_client_get_projects_async (GitlabClient        *self,
+                                  GAsyncReadyCallback  callback,
+                                  GCancellable        *cancellable)
+{
+	g_autoptr (GTask) task = NULL;
+
+	g_assert (GITLAB_IS_CLIENT (self));
+	g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
+
+	task = g_task_new (self, cancellable, callback, NULL);
+
+	g_task_run_in_thread (task, gitlab_client_get_projects_cb);
+}
+
+GList *
+gitlab_client_get_projects_finish (GitlabClient *self,
+                                   GAsyncResult  *res,
+                                   GError        **error)
+{
+	g_assert (GITLAB_IS_CLIENT (self));
+	g_assert (G_IS_TASK (res));
+
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+gitlab_client_get_project_issues_cb (GTask        *task,
+                                     gpointer      source_object,
+                                     gpointer      task_data,
+                                     GCancellable *cancellable)
+{
+	g_autoptr (GInputStream) stream = NULL;
+	GError *error = NULL;
+	g_autoptr (SoupMessage) msg = NULL;
+
+	g_assert (GITLAB_IS_CLIENT (source_object));
+	g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
+	g_assert (GITLAB_IS_PROJECT (task_data));
+
+	GitlabClient *self = GITLAB_CLIENT (source_object);
+	GitlabProject *project = GITLAB_PROJECT (task_data);
+
+	g_autofree gchar *url = g_strconcat (self->baseurl,
+																			 "/projects/",
+																			 gitlab_project_get_id(project),
+																			 "/issues",
+																			 NULL);
+	msg = gitlab_client_auth_message (self, url);
+	stream = soup_session_send (self->session, msg, cancellable, &error);
+	if (!stream) {
+		g_task_return_error (task, error);
+	}
+}
+
+/**
+ * gitlab_client_get_project_issues_async:
+ * @self: A #GitlabClient
+ * @project: A #GitlabProject
+ * @callback: the callback for the async operation
+ * @cancellable: (nullable): A #GCancellable, or %NULL
+ *
+ * Asynchronously loads all issues to a specific #GitlabProject
+ *
+ * See also: gitlab_client_get_project_issues_finish()
+ */
+void
+gitlab_client_get_project_issues_async (GitlabClient        *self,
+                                        GitlabProject       *project,
+                                        GAsyncReadyCallback  callback,
+                                        GCancellable        *cancellable)
+{
+	g_autoptr (GTask) task = NULL;
+
+	g_assert (GITLAB_IS_CLIENT (self));
+	g_assert (GITLAB_IS_PROJECT (project));
+	g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
+
+	task = g_task_new (self, cancellable, callback, NULL);
+
+	g_task_run_in_thread (task, gitlab_client_get_project_issues_cb);
+}
+
+GList *
+gitlab_client_get_project_issues_finish (GitlabClient  *self,
+                                         GAsyncResult  *res,
+                                         GError       **error)
+{
+	g_assert (GITLAB_IS_CLIENT (self));
+	g_assert (G_IS_TASK (res));
+
+	return g_task_propagate_pointer (G_TASK (res), error);
 }

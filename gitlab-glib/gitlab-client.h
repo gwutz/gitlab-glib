@@ -19,6 +19,8 @@
 #pragma once
 
 #include <glib-object.h>
+#include <gio/gio.h>
+#include "gitlab-project.h"
 
 G_BEGIN_DECLS
 
@@ -27,7 +29,20 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GitlabClient, gitlab_client, GITLAB, CLIENT, GObject)
 
 GitlabClient *gitlab_client_new (gchar *baseurl, gchar *token);
-void gitlab_client_get_version (GitlabClient *self, const gchar **version, const gchar **revision);
-GList *gitlab_client_get_projects (GitlabClient *self);
-
+void gitlab_client_get_version (GitlabClient  *self,
+                                const gchar  **version,
+                                const gchar  **revision);
+void gitlab_client_get_projects_async (GitlabClient        *self,
+                                       GAsyncReadyCallback  callback,
+                                       GCancellable        *cancellable);
+GList *gitlab_client_get_projects_finish (GitlabClient *self,
+                                          GAsyncResult  *res,
+                                          GError        **error);
+void gitlab_client_get_project_issues_async (GitlabClient        *self,
+                                             GitlabProject       *project,
+                                             GAsyncReadyCallback  callback,
+                                             GCancellable        *cancellable);
+GList *gitlab_client_get_project_issues_finish (GitlabClient  *self,
+                                                GAsyncResult  *res,
+                                                GError       **error);
 G_END_DECLS

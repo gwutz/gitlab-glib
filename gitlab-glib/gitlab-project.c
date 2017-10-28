@@ -145,6 +145,12 @@ gitlab_project_init (GitlabProject *self)
 {
 }
 
+gint
+gitlab_project_get_id (GitlabProject *self)
+{
+	return self->id;
+}
+
 gchar *
 gitlab_project_get_name (GitlabProject *self)
 {
