@@ -180,9 +180,9 @@ gitlab_client_parse_projects (GInputStream *stream,
 		JsonNode *node = json_array_get_element (array, i);
 		JsonObject *object = json_node_get_object (node);
 
-		if (json_object_has_member (object, "forked_from_project")) {
-			continue;
-		}
+		/* if (json_object_has_member (object, "forked_from_project")) { */
+		/* 	continue; */
+		/* } */
 
 		gint64 id = json_object_get_int_member (object, "id");
 		g_autofree gchar *name = g_strdup (json_object_get_string_member (object, "name_with_namespace"));
