@@ -316,6 +316,7 @@ gitlab_client_get_project_issues_cb (GTask        *task,
 																			 gitlab_project_get_id(project),
 																			 "/issues",
 																			 NULL);
+	g_print ("URL: %s\n", url);
 	msg = gitlab_client_auth_message (self, url);
 	/* stream = soup_session_send (self->session, msg, cancellable, &error); */
 	/* if (!stream) { */
