@@ -311,13 +311,14 @@ gitlab_client_get_project_issues_cb (GTask        *task,
 	GitlabClient *self = GITLAB_CLIENT (source_object);
 	GitlabProject *project = GITLAB_PROJECT (task_data);
 
-	g_autofree gchar *url2 = g_strconcat (self->baseurl,
+	/*g_autofree gchar *url2 = g_strconcat (self->baseurl,
 																			 "/projects/",
 																			 gitlab_project_get_id(project),
 																			 "/issues",
-																			 NULL);
-	g_print ("URL: %s\n", url2);
-	msg = gitlab_client_auth_message (self, url2);
+																			 NULL);*/
+	g_autofree gchar *url = g_strdup_printf ("%s/projects/%d/issues", self->baseurl, gitlab_project_get_id (project));
+	g_print ("URL: %s\n", url);
+	msg = gitlab_client_auth_message (self, url);
 	/* stream = soup_session_send (self->session, msg, cancellable, &error); */
 	/* if (!stream) { */
 	/* 	g_task_return_error (task, error); */
