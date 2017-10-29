@@ -349,6 +349,7 @@ gitlab_client_get_project_issues_async (GitlabClient        *self,
 	g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
 
 	task = g_task_new (self, cancellable, callback, NULL);
+	g_task_set_task_data (task, project, g_object_unref);
 
 	g_task_run_in_thread (task, gitlab_client_get_project_issues_cb);
 }
