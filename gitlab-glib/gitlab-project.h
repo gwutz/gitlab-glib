@@ -18,6 +18,7 @@
 #pragma once
 
 #include <glib-object.h>
+#include <json-glib/json-glib.h>
 
 G_BEGIN_DECLS
 
@@ -26,9 +27,11 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GitlabProject, gitlab_project, GITLAB, PROJECT, GObject)
 
 GitlabProject *gitlab_project_new (int id, gchar *name, gchar *description, gchar *avatar);
+GitlabProject *gitlab_project_new_from_node (JsonNode *node);
 gint   gitlab_project_get_id (GitlabProject *self);
 gchar *gitlab_project_get_name (GitlabProject *self);
 gchar *gitlab_project_get_description (GitlabProject *self);
 gchar *gitlab_project_get_avatar (GitlabProject *self);
+gchar *gitlab_project_get_http_url_to_repo (GitlabProject *self);
 
 G_END_DECLS

@@ -25,6 +25,7 @@ struct _GitlabProject
 	gchar *name;
 	gchar *description;
 	gchar *avatar;
+	gchar *http_url_to_repo;
 };
 
 G_DEFINE_TYPE (GitlabProject, gitlab_project, G_TYPE_OBJECT)
@@ -35,10 +36,33 @@ enum {
 	PROP_NAME,
 	PROP_DESCRIPTION,
 	PROP_AVATAR,
+	PROP_HTTP_URL_TO_REPO,
 	N_PROPS
 };
 
 static GParamSpec *properties [N_PROPS];
+
+GitlabProject *
+gitlab_project_new_from_node (JsonNode *node)
+{
+	JsonObject *object = json_node_get_object (node);
+
+	gint id = json_object_get_int_member (object, "id");
+	g_autofree gchar *name = g_strdup (json_object_get_string_member (object, "name_with_namespace"));
+	g_autofree gchar *description = g_strdup (json_object_get_string_member (object, "description"));
+	g_autofree gchar *avatar = g_strdup (json_object_get_string_member (object, "avatar_url"));
+	g_autofree gchar *http_url_to_repo = g_strdup (json_object_get_string_member (object, "http_url_to_repo"));
+
+	GitlabProject *self = g_object_new (GITLAB_TYPE_PROJECT,
+											 "id", id,
+											 "name", name,
+											 "description", description,
+											 "avatar", avatar,
+											 "http_url_to_repo", http_url_to_repo,
+											 NULL);
+
+	return self;
+}
 
 GitlabProject *
 gitlab_project_new (int id, gchar *name, gchar *description, gchar *avatar)
@@ -85,6 +109,9 @@ gitlab_project_get_property (GObject    *object,
 		case PROP_AVATAR:
 			g_value_set_string (value, self->avatar);
 			break;
+		case PROP_HTTP_URL_TO_REPO:
+			g_value_set_string (value, self->http_url_to_repo);
+			break;
 	  default:
 	    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 	  }
@@ -112,6 +139,9 @@ gitlab_project_set_property (GObject      *object,
 		case PROP_AVATAR:
 			self->avatar = g_value_dup_string (value);
 			break;
+		case PROP_HTTP_URL_TO_REPO:
+			self->http_url_to_repo = g_value_dup_string (value);
+			break;
 	  default:
 	    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 	  }
@@ -138,7 +168,11 @@ gitlab_project_class_init (GitlabProjectClass *klass)
 	properties[PROP_AVATAR] =
 		g_param_spec_string ("avatar", "Avatar", "The url of the avatar of the project", "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+	properties[PROP_HTTP_URL_TO_REPO] =
+		g_param_spec_string ("http_url_to_repo", "Http_url_to_repo", "The http url of the repository", "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
 	g_object_class_install_properties (object_class, N_PROPS, properties);
+
 }
 
 static void
@@ -168,4 +202,10 @@ gchar *
 gitlab_project_get_avatar (GitlabProject *self)
 {
 	return self->avatar;
+}
+
+gchar *
+gitlab_project_get_http_url_to_repo (GitlabProject *self)
+{
+	return self->http_url_to_repo;
 }
