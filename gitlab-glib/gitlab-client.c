@@ -317,10 +317,14 @@ gitlab_client_get_project_issues_cb (GTask        *task,
 																			 "/issues",
 																			 NULL);
 	msg = gitlab_client_auth_message (self, url);
-	stream = soup_session_send (self->session, msg, cancellable, &error);
-	if (!stream) {
-		g_task_return_error (task, error);
-	}
+	/* stream = soup_session_send (self->session, msg, cancellable, &error); */
+	/* if (!stream) { */
+	/* 	g_task_return_error (task, error); */
+	/* } */
+
+	soup_session_send_message (self->session, msg);
+
+	g_print ("%s\n", msg->response_body->data);
 }
 
 /**
