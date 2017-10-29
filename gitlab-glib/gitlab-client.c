@@ -220,7 +220,7 @@ gitlab_client_get_projects_cb (GTask        *task,
 	g_assert (!cancellable || G_IS_CANCELLABLE (cancellable));
 
 	GitlabClient *self = GITLAB_CLIENT (source_object);
-	g_autofree gchar *url = g_strconcat (self->baseurl, "/projects", NULL);
+	g_autofree gchar *url = g_strconcat (self->baseurl, "/groups/GNOME/projects", NULL);
 	SoupMessage *msg = gitlab_client_auth_message (self, url);
 	stream = soup_session_send (self->session, msg, cancellable, &error);
 	g_object_unref (msg);
