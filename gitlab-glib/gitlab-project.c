@@ -41,9 +41,10 @@ enum {
 static GParamSpec *properties [N_PROPS];
 
 GitlabProject *
-gitlab_project_new (gchar *name, gchar *description, gchar *avatar)
+gitlab_project_new (int id, gchar *name, gchar *description, gchar *avatar)
 {
 	return g_object_new (GITLAB_TYPE_PROJECT,
+											 "id", id,
 											 "name", name,
 											 "description", description,
 											 "avatar", avatar,

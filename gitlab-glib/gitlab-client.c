@@ -183,11 +183,13 @@ gitlab_client_parse_projects (GInputStream *stream,
 		if (json_object_has_member (object, "forked_from_project")) {
 			continue;
 		}
+
+		gint64 id = json_object_get_int_member (object, "id");
 		g_autofree gchar *name = g_strdup (json_object_get_string_member (object, "name_with_namespace"));
 		g_autofree gchar *description = g_strdup (json_object_get_string_member (object, "description"));
 		g_autofree gchar *avatar = g_strdup (json_object_get_string_member (object, "avatar_url"));
 
-		GitlabProject *p = gitlab_project_new (name, description, avatar);
+		GitlabProject *p = gitlab_project_new (id, name, description, avatar);
 		list = g_list_append (list, p);
 	}
 
