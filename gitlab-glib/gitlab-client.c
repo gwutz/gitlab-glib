@@ -261,6 +261,7 @@ gitlab_client_get_projects_cb (GTask        *task,
  * @self: a #GitlabClient
  * @callback: the callback for the async operation
  * @cancellable: (nullable): a #Gcancellable, or %NULL
+ * @user_data: user defined parameter
  *
  * Asynchronously loads all projects, which are not forked from other projects
  *
@@ -328,6 +329,7 @@ gitlab_client_get_project_issues_cb (GTask        *task,
  * @project: A #GitlabProject
  * @callback: the callback for the async operation
  * @cancellable: (nullable): A #GCancellable, or %NULL
+ * @user_data: user defined parameter
  *
  * Asynchronously loads all issues to a specific #GitlabProject
  *
@@ -337,7 +339,8 @@ void
 gitlab_client_get_project_issues_async (GitlabClient        *self,
                                         GitlabProject       *project,
                                         GAsyncReadyCallback  callback,
-                                        GCancellable        *cancellable)
+                                        GCancellable        *cancellable,
+                                        gpointer             user_data)
 {
 	g_autoptr (GTask) task = NULL;
 

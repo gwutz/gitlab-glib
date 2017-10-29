@@ -1,9 +1,12 @@
 [default]
 name=Vorgabe
 device=local
-runtime=flatpak:org.gnome.Sdk/x86_64/3.26
+runtime=host
 config-opts=
 run-opts=
-prefix=/app
+prefix=/home/gunibert/Projects/gitlab-glib/app
 app-id=
 default=true
+
+[default.environment]
+LD_LIBRARY_PATH=/home/gunibert/Projects/gitlab-glib/app/lib

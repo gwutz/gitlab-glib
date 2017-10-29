@@ -42,8 +42,7 @@ GList *gitlab_client_get_projects_finish (GitlabClient *self,
 void gitlab_client_get_project_issues_async (GitlabClient        *self,
                                              GitlabProject       *project,
                                              GAsyncReadyCallback  callback,
-                                             GCancellable        *cancellable,
-                                             gpointer             user_data);
+                                             GCancellable        *cancellable);
 GList *gitlab_client_get_project_issues_finish (GitlabClient  *self,
                                                 GAsyncResult  *res,
                                                 GError       **error);

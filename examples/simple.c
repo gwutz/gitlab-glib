@@ -52,6 +52,7 @@ gint
 main (gint   argc,
       gchar *argv[])
 {
+	g_print ("Started simple workground\n");
 	GitlabClient *client = gitlab_client_new ("https://gitlab.gnome.org/api/v4", "GgnbVSvFS8xj22nFtVg9");
 
 	gitlab_client_get_projects_async (client, callback, NULL, NULL);
