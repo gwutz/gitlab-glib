@@ -58,7 +58,7 @@ gitlab_project_new_from_node (JsonNode *node)
 											 "name", name,
 											 "description", description,
 											 "avatar", avatar,
-											 "http_url_to_repo", http_url_to_repo,
+											 "http-url-to-repo", http_url_to_repo,
 											 NULL);
 
 	return self;
@@ -83,6 +83,7 @@ gitlab_project_finalize (GObject *object)
 	g_free (self->name);
 	g_free (self->description);
 	g_free (self->avatar);
+	g_free (self->http_url_to_repo);
 
 	G_OBJECT_CLASS (gitlab_project_parent_class)->finalize (object);
 }
@@ -169,7 +170,7 @@ gitlab_project_class_init (GitlabProjectClass *klass)
 		g_param_spec_string ("avatar", "Avatar", "The url of the avatar of the project", "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
 	properties[PROP_HTTP_URL_TO_REPO] =
-		g_param_spec_string ("http_url_to_repo", "Http_url_to_repo", "The http url of the repository", "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+		g_param_spec_string ("http-url-to-repo", "Http-url-to-repo", "The http url of the repository", "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
 	g_object_class_install_properties (object_class, N_PROPS, properties);
 

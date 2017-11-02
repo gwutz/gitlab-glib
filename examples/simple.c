@@ -1,7 +1,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include "gitlab-client.h"
-#include "gitlab-project.h"
+//#include "gitlab-project.h"
 
 void
 callback (GObject      *source_object,
@@ -21,7 +21,7 @@ callback (GObject      *source_object,
 	for (GList *current = projects; current != NULL; current = current->next) {
 		GitlabProject *p = current->data;
 
-		g_print ("Name: %s\n", gitlab_project_get_name (p));
+		g_print ("Name: %s\t\tURL: %s\n", gitlab_project_get_name (p), gitlab_project_get_http_url_to_repo (p));
 	}
 
 	g_list_free_full (projects, g_object_unref);
