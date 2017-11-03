@@ -53,6 +53,9 @@ gitlab_client_new (gchar *baseurl,
 											 								 NULL);
 	client->session = soup_session_new ();
 
+	SoupLogger *logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
+	soup_session_add_feature (client->session, SOUP_SESSION_FEATURE (logger));
+
 	return client;
 }
 
