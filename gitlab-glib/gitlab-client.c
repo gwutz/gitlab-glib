@@ -238,7 +238,7 @@ gitlab_client_get_projects_cb (GTask        *task,
 			url = g_strconcat (self->baseurl, "/groups/GNOME/projects", "?page=", p, NULL);
 
 			g_print ("Before Message\n");
-			msg = gitlab_client_auth_message (self, url);
+			SoupMessage *msg = gitlab_client_auth_message (self, url);
 			g_print ("Before Send\n");
 			stream = soup_session_send (self->session, msg, cancellable, &error);
 			g_print ("After Send\n");
