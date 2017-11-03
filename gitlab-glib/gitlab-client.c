@@ -28,8 +28,6 @@ struct _GitlabClient
 
 	gchar *baseurl;
 	gchar *token;
-
-	SoupSession *session;
 };
 
 G_DEFINE_TYPE (GitlabClient, gitlab_client, G_TYPE_OBJECT)
@@ -51,10 +49,6 @@ gitlab_client_new (gchar *baseurl,
 											 								 "baseurl", baseurl,
 											 								 "token", token,
 											 								 NULL);
-	client->session = soup_session_new ();
-
-	SoupLogger *logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
-	soup_session_add_feature (client->session, SOUP_SESSION_FEATURE (logger));
 
 	return client;
 }
@@ -66,7 +60,6 @@ gitlab_client_finalize (GObject *object)
 
 	g_free (self->baseurl);
 	g_free (self->token);
-	g_object_unref (self->session);
 
 	G_OBJECT_CLASS (gitlab_client_parent_class)->finalize (object);
 }
@@ -150,6 +143,7 @@ gitlab_client_get_version (GitlabClient  *self,
                            const gchar        **revision)
 {
 	GError *error = NULL;
+	g_autoptr (SoupSession) session = soup_session_new ();
 
 	gchar *url = g_strconcat (self->baseurl, "/version", NULL);
 	SoupMessage *msg = soup_message_new ("GET", url);
@@ -157,7 +151,7 @@ gitlab_client_get_version (GitlabClient  *self,
 
 	soup_message_headers_append (msg->request_headers, "PRIVATE-TOKEN", self->token);
 
-	soup_session_send_message (self->session, msg);
+	soup_session_send_message (session, msg);
 
 	JsonParser *parser = json_parser_new ();
 	json_parser_load_from_data (parser, msg->response_body->data, msg->response_body->length, &error);
@@ -205,8 +199,8 @@ gitlab_client_get_projects_cb (GTask        *task,
                                gpointer      task_data,
                                GCancellable *cancellable)
 {
-	g_print ("Start fetching\n");
 	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(SoupSession) session = soup_session_new ();
 	GError *error = NULL;
 	GList *list = NULL;
 
@@ -216,7 +210,7 @@ gitlab_client_get_projects_cb (GTask        *task,
 	GitlabClient *self = GITLAB_CLIENT (source_object);
 	g_autofree gchar *url = g_strconcat (self->baseurl, "/groups/GNOME/projects", NULL);
 	SoupMessage *msg = gitlab_client_auth_message (self, url);
-	stream = soup_session_send (self->session, msg, cancellable, &error);
+	stream = soup_session_send (session, msg, cancellable, &error);
 	if (!stream && !g_input_stream_close (stream, cancellable, &error)) {
 		g_task_return_error (task, error);
 		g_object_unref (msg);
@@ -238,9 +232,9 @@ gitlab_client_get_projects_cb (GTask        *task,
 			url = g_strconcat (self->baseurl, "/groups/GNOME/projects", "?page=", p, NULL);
 
 			g_print ("Before Message\n");
-			SoupMessage *msg = gitlab_client_auth_message (self, url);
+			msg = gitlab_client_auth_message (self, url);
 			g_print ("Before Send\n");
-			stream = soup_session_send (self->session, msg, cancellable, &error);
+			stream = soup_session_send (session, msg, cancellable, &error);
 			g_print ("After Send\n");
 			if (!stream) {
 				g_task_return_error (task, error);
@@ -336,7 +330,7 @@ gitlab_client_get_project_issues_cb (GTask        *task,
 	/* 	g_task_return_error (task, error); */
 	/* } */
 
-	soup_session_send_message (self->session, msg);
+	//soup_session_send_message (self->session, msg);
 
 	g_print ("%s\n", msg->response_body->data);
 }
