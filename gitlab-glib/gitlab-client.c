@@ -202,6 +202,7 @@ gitlab_client_get_projects_cb (GTask        *task,
                                gpointer      task_data,
                                GCancellable *cancellable)
 {
+	g_print ("Start fetching\n");
 	g_autoptr(GInputStream) stream = NULL;
 	GError *error = NULL;
 	GList *list = NULL;
@@ -269,6 +270,7 @@ gitlab_client_get_projects_async (GitlabClient        *self,
                                   GCancellable        *cancellable,
                                   gpointer             user_data)
 {
+	g_print ("Start async\n");
 	g_autoptr (GTask) task = NULL;
 
 	g_assert (GITLAB_IS_CLIENT (self));
