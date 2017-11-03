@@ -213,13 +213,13 @@ gitlab_client_get_projects_cb (GTask        *task,
 	g_autofree gchar *url = g_strconcat (self->baseurl, "/groups/GNOME/projects", NULL);
 	SoupMessage *msg = gitlab_client_auth_message (self, url);
 	stream = soup_session_send (self->session, msg, cancellable, &error);
-	g_object_unref (msg);
 	if (!stream && !g_input_stream_close (stream, cancellable, &error)) {
 		g_task_return_error (task, error);
 	}
 
 	const gchar *pages_str = soup_message_headers_get_one (msg->response_headers, "X-Total-Pages");
 	int pages = strtol (pages_str, NULL, 10);
+	g_object_unref (msg);
 
 	for (int i = 1; i <= pages; i++)
 	  {
