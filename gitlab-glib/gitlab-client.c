@@ -217,8 +217,10 @@ gitlab_client_get_projects_cb (GTask        *task,
 	if (!stream && !g_input_stream_close (stream, cancellable, &error)) {
 		g_task_return_error (task, error);
 		g_object_unref (msg);
+		g_print ("first error\n");
 		return;
 	}
+	g_print ("first pass\n");
 
 	const gchar *pages_str = soup_message_headers_get_one (msg->response_headers, "X-Total-Pages");
 	int pages = strtol (pages_str, NULL, 10);
