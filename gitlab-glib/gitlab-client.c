@@ -234,8 +234,11 @@ gitlab_client_get_projects_cb (GTask        *task,
 			g_snprintf (p, 3, "%d", i);
 			url = g_strconcat (self->baseurl, "/groups/GNOME/projects", "?page=", p, NULL);
 
+			g_print ("Before Message\n");
 			msg = gitlab_client_auth_message (self, url);
+			g_print ("Before Send\n");
 			stream = soup_session_send (self->session, msg, cancellable, &error);
+			g_print ("After Send\n");
 			if (!stream) {
 				g_task_return_error (task, error);
 				g_print ("second error\n");
