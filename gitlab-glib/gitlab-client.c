@@ -226,6 +226,8 @@ gitlab_client_get_projects_cb (GTask        *task,
 	int pages = strtol (pages_str, NULL, 10);
 	g_object_unref (msg);
 
+	g_print ("pages: %s\n", pages_str);
+
 	for (int i = 1; i <= pages; i++)
 	  {
 			char p[3];
