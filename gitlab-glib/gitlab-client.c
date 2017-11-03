@@ -236,13 +236,17 @@ gitlab_client_get_projects_cb (GTask        *task,
 			stream = soup_session_send (self->session, msg, cancellable, &error);
 			if (!stream) {
 				g_task_return_error (task, error);
+				g_print ("second error\n");
 				return;
 			}
+			g_print ("second pass\n");
 			GList *more = gitlab_client_parse_projects (stream, cancellable, error);
 			if (!g_input_stream_close (stream, cancellable, &error)) {
 				g_task_return_error (task, error);
+				g_print ("third error\n");
 				return;
 			}
+			g_print ("third pass\n");
 			g_object_unref (msg);
 
 			if (list == NULL) {
