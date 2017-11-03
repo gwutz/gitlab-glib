@@ -215,6 +215,8 @@ gitlab_client_get_projects_cb (GTask        *task,
 	stream = soup_session_send (self->session, msg, cancellable, &error);
 	if (!stream && !g_input_stream_close (stream, cancellable, &error)) {
 		g_task_return_error (task, error);
+		g_object_unref (msg);
+		return;
 	}
 
 	const gchar *pages_str = soup_message_headers_get_one (msg->response_headers, "X-Total-Pages");
@@ -231,10 +233,12 @@ gitlab_client_get_projects_cb (GTask        *task,
 			stream = soup_session_send (self->session, msg, cancellable, &error);
 			if (!stream) {
 				g_task_return_error (task, error);
+				return;
 			}
 			GList *more = gitlab_client_parse_projects (stream, cancellable, error);
 			if (!g_input_stream_close (stream, cancellable, &error)) {
 				g_task_return_error (task, error);
+				return;
 			}
 			g_object_unref (msg);
 
