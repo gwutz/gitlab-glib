@@ -214,16 +214,12 @@ gitlab_client_get_projects_cb (GTask        *task,
 	if (!stream && !g_input_stream_close (stream, cancellable, &error)) {
 		g_task_return_error (task, error);
 		g_object_unref (msg);
-		g_print ("first error\n");
 		return;
 	}
-	g_print ("first pass\n");
 
 	const gchar *pages_str = soup_message_headers_get_one (msg->response_headers, "X-Total-Pages");
 	int pages = strtol (pages_str, NULL, 10);
 	g_object_unref (msg);
-
-	g_print ("pages: %s\n", pages_str);
 
 	for (int i = 1; i <= pages; i++)
 	  {
@@ -231,24 +227,17 @@ gitlab_client_get_projects_cb (GTask        *task,
 			g_snprintf (p, 3, "%d", i);
 			url = g_strconcat (self->baseurl, "/groups/GNOME/projects", "?page=", p, NULL);
 
-			g_print ("Before Message\n");
 			msg = gitlab_client_auth_message (self, url);
-			g_print ("Before Send\n");
 			stream = soup_session_send (session, msg, cancellable, &error);
-			g_print ("After Send\n");
 			if (!stream) {
 				g_task_return_error (task, error);
-				g_print ("second error\n");
 				return;
 			}
-			g_print ("second pass\n");
 			GList *more = gitlab_client_parse_projects (stream, cancellable, error);
 			if (!g_input_stream_close (stream, cancellable, &error)) {
 				g_task_return_error (task, error);
-				g_print ("third error\n");
 				return;
 			}
-			g_print ("third pass\n");
 			g_object_unref (msg);
 
 			if (list == NULL) {
@@ -278,7 +267,6 @@ gitlab_client_get_projects_async (GitlabClient        *self,
                                   GCancellable        *cancellable,
                                   gpointer             user_data)
 {
-	g_print ("Start async\n");
 	g_autoptr (GTask) task = NULL;
 
 	g_assert (GITLAB_IS_CLIENT (self));
