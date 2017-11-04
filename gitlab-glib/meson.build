@@ -5,6 +5,7 @@ public_headers = [
 ]
 
 source_c = [
+	public_headers,
 	'gitlab-client.c',
 	'gitlab-project.c'
 ]
