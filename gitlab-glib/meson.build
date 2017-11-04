@@ -1,4 +1,5 @@
 public_headers = [
+	'gitlab.h',
 	'gitlab-client.h',
 	'gitlab-project.h'
 ]
