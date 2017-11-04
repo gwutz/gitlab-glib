@@ -1,0 +1,6 @@
+{
+global:
+    gitlab_*;
+local:
+    *;
+};

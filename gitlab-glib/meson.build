@@ -15,6 +15,7 @@ gitlab_include = include_directories('.')
 gitlab_lib = library('gitlab-glib',
 	source_c,
 	dependencies: [gobject_dep, libsoup_dep, json_glib_dep],
+	link_depends: 'gitlab.map',
 	install: true)
 
 pkgconfig = import('pkgconfig')
@@ -23,6 +24,7 @@ pkgconfig.generate(
 	name: 'gitlab-glib',
 	description: 'A GObject based Gitlab client library',
 	libraries: gitlab_lib,
+	subdirs: 'gitlab-glib',
 	version: '0.1'
 	)
 

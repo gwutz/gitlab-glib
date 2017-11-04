@@ -6,4 +6,4 @@ Name: gitlab-glib
 Description: A GObject based Gitlab client library
 Version: 0.1
 Libs: -L${libdir} -lgitlab-glib
-Cflags: -I${includedir}
+Cflags: -I${includedir}/gitlab-glib
