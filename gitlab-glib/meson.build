@@ -10,7 +10,7 @@ source_c = [
 
 gitlab_include = include_directories('.')
 
-gitlab_lib = library('gitlab_glib',
+gitlab_lib = library('gitlab-glib',
 	source_c,
 	dependencies: [gobject_dep, libsoup_dep, json_glib_dep],
 	install: true)
@@ -18,12 +18,13 @@ gitlab_lib = library('gitlab_glib',
 pkgconfig = import('pkgconfig')
 
 pkgconfig.generate(
-	name: 'gitlab_glib',
+	name: 'gitlab-glib',
 	description: 'A GObject based Gitlab client library',
 	libraries: gitlab_lib,
 	version: '0.1'
 	)
 
 install_headers(
-	public_headers
+	public_headers,
+	subdir: 'gitlab-glib'
 )
